@@ -2,16 +2,15 @@
 """
 Dremio Token Refresher
 
-Automatically refreshes Dremio authentication tokens and restarts the MCP service.
+Automatically refreshes Dremio authentication tokens.
 """
 
 import os
 import sys
 import time
 import requests
-import docker
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 
 # Configure logging
@@ -27,16 +26,6 @@ class TokenRefresher:
         self.username = os.environ["DREMIO_USERNAME"]
         self.password = os.environ["DREMIO_PASSWORD"]
         self.token_file = os.environ["TOKEN_FILE"]
-        self.compose_project = os.environ.get(
-            "COMPOSE_PROJECT_NAME", "dremio-mcp-docker"
-        )
-
-        # Docker client for restarting services
-        try:
-            self.docker_client = docker.from_env()
-        except Exception as e:
-            logger.error(f"Failed to connect to Docker: {e}")
-            sys.exit(1)
 
     def get_fresh_token(self) -> Optional[str]:
         """Authenticate with Dremio and get a fresh token."""
@@ -84,31 +73,6 @@ class TokenRefresher:
             logger.error(f"Failed to write token: {e}")
             return False
 
-    def restart_mcp_service(self) -> bool:
-        """Restart the Dremio MCP service."""
-        try:
-            # Find the MCP container
-            container_name = f"{self.compose_project}_dremio-mcp_1"
-
-            try:
-                container = self.docker_client.containers.get(container_name)
-            except docker.errors.NotFound:
-                # Try alternative naming convention
-                container_name = f"{self.compose_project}-dremio-mcp-1"
-                container = self.docker_client.containers.get(container_name)
-
-            logger.info(f"Restarting container: {container_name}")
-            container.restart()
-            logger.info("MCP service restarted successfully")
-            return True
-
-        except docker.errors.NotFound:
-            logger.error(f"MCP container not found. Tried: {container_name}")
-            return False
-        except Exception as e:
-            logger.error(f"Failed to restart MCP service: {e}")
-            return False
-
     def refresh_token(self) -> bool:
         """Complete token refresh process."""
         logger.info("Starting token refresh process")
@@ -120,10 +84,6 @@ class TokenRefresher:
 
         # Write token to file
         if not self.write_token(token):
-            return False
-
-        # Restart MCP service
-        if not self.restart_mcp_service():
             return False
 
         logger.info("Token refresh completed successfully")

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   dremio-mcp:
     build: 
@@ -11,13 +9,14 @@ services:
       - EXTRA_ARGS=${MCP_EXTRA_ARGS:-}
     volumes:
       - token-volume:/app/tokens:ro
-    restart: unless-stopped
     depends_on:
       - token-refresher
     networks:
       - dremio-mcp-network
     stdin_open: true
     tty: true
+    extra_hosts:
+      - "dremio.dev.serraict.me:host-gateway"
 
   token-refresher:
     build:
@@ -32,10 +31,10 @@ services:
       - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}
     volumes:
       - token-volume:/app/tokens:rw
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: unless-stopped
     networks:
       - dremio-mcp-network
+    extra_hosts:
+      - "dremio.dev.serraict.me:host-gateway"
 
 volumes:
   token-volume:
