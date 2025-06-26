@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  dremio-mcp:
+    build: 
+      context: ./services/dremio-mcp
+      args:
+        - DREMIO_MCP_REPO=https://github.com/dremio/dremio-mcp.git
+        - DREMIO_MCP_VERSION=main
+    container_name: dremio-mcp-server
+    environment:
+      - DREMIO_URI=${DREMIO_URI}
+      - DREMIO_PAT_FILE=/app/tokens/current.token
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - tokens:/app/tokens:ro
+    ports:
+      - "${MCP_PORT:-3000}:3000"
+    restart: unless-stopped
+    depends_on:
+      token-refresher:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/tokens/current.token"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - dremio-mcp-network
+
+  token-refresher:
+    build: 
+      context: ./services/token-refresher
+    container_name: dremio-token-refresher
+    environment:
+      - DREMIO_URI=${DREMIO_URI}
+      - DREMIO_USERNAME=${DREMIO_USERNAME}
+      - DREMIO_PASSWORD=${DREMIO_PASSWORD}
+      - TOKEN_FILE=/app/tokens/current.token
+      - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - REFRESH_INTERVAL=${REFRESH_INTERVAL:-300}
+      - REFRESH_THRESHOLD=${REFRESH_THRESHOLD:-6}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - tokens:/app/tokens:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "/app/health_check.py"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - dremio-mcp-network
+
+volumes:
+  tokens:
+    driver: local
+
+networks:
+  dremio-mcp-network:
+    driver: bridge

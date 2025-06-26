@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  dremio-mcp:
+    build: 
+      context: ./services/dremio-mcp
+      dockerfile: Dockerfile
+    container_name: "${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}_dremio-mcp_1"
+    environment:
+      - DREMIO_URI=${DREMIO_URI}
+      - EXTRA_ARGS=${MCP_EXTRA_ARGS:-}
+    volumes:
+      - token-volume:/app/tokens:ro
+    restart: unless-stopped
+    depends_on:
+      - token-refresher
+    networks:
+      - dremio-mcp-network
+    stdin_open: true
+    tty: true
+
+  token-refresher:
+    build:
+      context: ./services/token-refresher
+      dockerfile: Dockerfile
+    container_name: "${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}_token-refresher_1"
+    environment:
+      - DREMIO_URI=${DREMIO_URI}
+      - DREMIO_USERNAME=${DREMIO_USERNAME}
+      - DREMIO_PASSWORD=${DREMIO_PASSWORD}
+      - REFRESH_INTERVAL=${REFRESH_INTERVAL:-72000}
+      - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}
+    volumes:
+      - token-volume:/app/tokens:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - dremio-mcp-network
+
+volumes:
+  token-volume:
+    driver: local
+
+networks:
+  dremio-mcp-network:
+    driver: bridge

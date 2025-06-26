@@ -1,0 +1,66 @@
+# Dockerfile for Dremio MCP Server - Standalone Deployment
+# This Dockerfile installs the Dremio MCP server directly from its GitHub repository
+
+FROM python:3.11-slim
+
+LABEL org.opencontainers.image.source="https://github.com/your-org/dremio-mcp-docker"
+LABEL org.opencontainers.image.description="Dremio MCP Server - Standalone Docker Deployment"
+LABEL org.opencontainers.image.title="Dremio MCP Server"
+
+# Build arguments for flexibility
+ARG DREMIO_MCP_REPO=https://github.com/dremio/dremio-mcp.git
+ARG DREMIO_MCP_VERSION=main
+ARG PYTHON_VERSION=3.11
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Create non-root user for security
+RUN groupadd -r mcp && useradd -r -g mcp -d /app -s /bin/bash mcp
+
+# Install Dremio MCP directly from GitHub repository
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir git+${DREMIO_MCP_REPO}@${DREMIO_MCP_VERSION}
+
+# Create directory for token files with proper permissions
+RUN mkdir -p /app/tokens \
+    && chown -R mcp:mcp /app \
+    && chmod 750 /app/tokens
+
+# Copy health check script
+COPY --chown=mcp:mcp health_check.py /app/health_check.py
+RUN chmod +x /app/health_check.py
+
+# Copy entrypoint script
+COPY --chown=mcp:mcp entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Switch to non-root user
+USER mcp
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV DREMIO_PAT_FILE=/app/tokens/current.token
+ENV MCP_PORT=3000
+
+# Health check to verify MCP server and token validity
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python /app/health_check.py || exit 1
+
+# Expose MCP server port
+EXPOSE ${MCP_PORT}
+
+# Set entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Default command with configurable port
+CMD ["dremio-mcp-server", "run", "--port", "3000"]
