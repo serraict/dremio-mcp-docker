@@ -1,12 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 echo "Starting Dremio Token Refresher..."
 
 # Validate required environment variables
-required_vars=("DREMIO_URI" "DREMIO_USERNAME" "DREMIO_PASSWORD")
-for var in "${required_vars[@]}"; do
-    if [ -z "${!var}" ]; then
+required_vars="DREMIO_URI DREMIO_USERNAME DREMIO_PASSWORD"
+for var in $required_vars; do
+    if [ -z "$(eval echo \$$var)" ]; then
         echo "Error: Required environment variable $var is not set"
         exit 1
     fi
