@@ -24,6 +24,8 @@ cat > /home/mcp/.config/dremioai/config.yaml << EOF
 dremio:
   uri: "${DREMIO_URI}"
   pat: "${DREMIO_TOKEN}"
+tools:
+  server_mode: FOR_DATA_PATTERNS
 EOF
 
 echo "Config file created successfully"
@@ -31,7 +33,10 @@ echo "Config file created successfully"
 # Start Supergateway with Dremio MCP as stdio backend
 echo "Starting Supergateway on port 7910 with Dremio MCP backend..."
 exec npx -y supergateway \
-    --stdio "dremio-mcp-server run ${EXTRA_ARGS}" \
+    --stdio "dremio-mcp-server run -c /home/mcp/.config/dremioai/config.yaml ${EXTRA_ARGS}" \
     --outputTransport streamableHttp \
+    --stateful \
+    --sessionTimeout 60000 \
     --port 7910 \
-    --streamableHttpPath /mcp
+    --streamableHttpPath /mcp \
+    --logLevel info
