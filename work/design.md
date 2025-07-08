@@ -8,11 +8,16 @@ These containers allow you to run an MCP server for your Dremio Community editio
 ## Problem Statement
 
 The Dremio MCP server requires authentication tokens.
-The Dremio community edition does not have the functionality of creating personal access tokens,
-but we can use our username and password to get login token from the api,
-which can be used as an access token for the Dremio MCP server.
+The Dremio community edition does not have the functionality of creating personal access tokens.
+
+The Dremio MCP server interfaces over stdio, requiring to run an instance of it on the same node.
 
 ## Solution Architecture
+
+We can use our username and password to get login token from the api,
+which can be used as an access token for the Dremio MCP server.
+
+Provide an http streamable proxy in front of dremio mcp.
 
 ### Multi-Container Design
 
@@ -20,14 +25,14 @@ The solution employs a two-service architecture:
 
 1. **Dremio MCP Server Container**
 
-- Runs the official Dremio MCP server.
-- Provides MCP interface to clients.
+- ✅ Runs the official Dremio MCP server.
+- ⏳ Provides MCP interface to clients.
 
 2. **Token Refresher Container**
 
-- Retrieves token from Dremio community edition
-- Monitors token expiration continuously.
-- Restarts MCP server after token refresh.
+- ✅ Retrieves token from Dremio community edition
+- ✅ Monitors token expiration continuously.
+- ❌ Restarts MCP server after token refresh - we do not do this because we don't want to give this container access to sudo and docker privileges.
 
 ### Shared Token Storage
 
@@ -49,6 +54,8 @@ Both containers share a Docker volume for secure token storage:
 ## Implementation Details
 
 ### Repository Structure
+
+(todo: review)
 
 ```text
 dremio-mcp-docker/
@@ -76,58 +83,18 @@ dremio-mcp-docker/
 
 ### Docker Compose Configuration
 
-```yaml
-version: '3.8'
-
-services:
-  dremio-mcp:
-    build: ./services/dremio-mcp
-    ports:
-      - "3000:3000"
-    restart: unless-stopped
-    depends_on:
-      token-refresher:
-        condition: service_healthy
-
-  token-refresher:
-    build: ./services/token-refresher
-    environment:
-      - DREMIO_URI=${DREMIO_URI}
-      - DREMIO_USERNAME=${DREMIO_USERNAME}
-      - DREMIO_PASSWORD=${DREMIO_PASSWORD}
-    volumes:
-      - tokens:/app/tokens:rw
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: unless-stopped
-
-volumes:
-  tokens:
-```
+Todo: reference the files
 
 ### Environment Configuration
 
-```env
-# Required Configuration
-DREMIO_URI=https://your-dremio-instance.com
-DREMIO_USERNAME=your-username
-DREMIO_PASSWORD=your-password
-
-# Optional Configuration
-COMPOSE_PROJECT_NAME=dremio-mcp-docker
-LOG_LEVEL=INFO
-MCP_PORT=3000
-REFRESH_INTERVAL=300
-REFRESH_THRESHOLD=6
-```
+Todo: create .env.example files
 
 ## Security Considerations
 
 ### Container Security
 
 1. **Non-root Execution**: All containers run as dedicated non-root users.
-2. **Minimal Images**: Based on slim Python images to reduce attack surface.
-3. **Read-only Filesystems**: Where possible, containers use read-only root filesystems.
-4. **Capability Dropping**: Unnecessary Linux capabilities are removed.
+2. **Read-only Filesystems**: Where possible, containers use read-only root filesystems.
 
 ### Secret Management
 
@@ -140,8 +107,7 @@ REFRESH_THRESHOLD=6
 
 1. **Internal Networks**: Services communicate over internal Docker networks.
 2. **Minimal Exposure**: Only MCP server port exposed externally.
-3. **Firewall Integration**: Designed to work with external firewalls.
-4. **TLS Support**: Ready for TLS termination via reverse proxy.
+3. **TLS Support**: Ready for TLS termination via reverse proxy.
 
 ## Operational Features
 

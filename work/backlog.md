@@ -7,6 +7,7 @@ and have it support application development in my VS Code IDE.
 
 ## Backlog
 
-* start the dremio mcp server container with the token
-* add the mcp server as a service to my local vscode agent
-* add workflow to create a container image for the mcp server
+* use supergateway as streamable http proxy in front of the stdio dremio mcp server
+* test with the http mcp server in my local vscode
+* add the mcp server to serra vine
+* add a chatbot to the docs

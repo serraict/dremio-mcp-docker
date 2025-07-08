@@ -4,6 +4,8 @@ services:
       context: ./services/dremio-mcp
       dockerfile: Dockerfile
     container_name: "${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}_dremio-mcp_1"
+    ports:
+      - "7910:7910"
     environment:
       - DREMIO_URI=${DREMIO_URI}
       - EXTRA_ARGS=${MCP_EXTRA_ARGS:-}
