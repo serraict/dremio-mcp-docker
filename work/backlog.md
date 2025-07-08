@@ -7,7 +7,6 @@ and have it support application development in my VS Code IDE.
 
 ## Backlog
 
-* use supergateway as streamable http proxy in front of the stdio dremio mcp server
-* test with the http mcp server in my local vscode
+* create an image for the mcp server
 * add the mcp server to serra vine
 * add a chatbot to the docs
