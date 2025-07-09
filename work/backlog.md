@@ -3,7 +3,7 @@
 ## Vision
 
 Run the Dremio MCP server against your Dremio Community instance,
-and have it support application development in my VS Code IDE.
+and have it support analysis and application development in your VS Code IDE.
 
 ## Backlog
 

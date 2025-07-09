@@ -1,4 +1,4 @@
-.PHONY: build-images
+.PHONY: build-images console
 
 build-images:
 	docker compose build --no-cache
