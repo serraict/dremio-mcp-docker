@@ -13,7 +13,7 @@ Quick start guide for deploying Dremio MCP Server with Docker.
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/your-org/dremio-mcp-docker.git
+   git clone https://github.com/serraict/dremio-mcp-docker.git
    cd dremio-mcp-docker
    ```
 
@@ -55,7 +55,7 @@ The Dremio MCP server provides the following tools for database interaction:
 1. **Ensure the Dremio MCP Docker stack is running:**
 
    ```bash
-   docker-compose up -d
+   docker compose up -d
    # Verify HTTP endpoint is accessible
    curl -f http://localhost:7910/mcp
    ```
