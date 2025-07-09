@@ -1,4 +1,22 @@
 services:
+  dremio:
+    image: dremio/dremio-oss:latest
+    ports:
+      - "9047:9047"   # Dremio web UI
+      - "31011:31010" # Dremio client port (mapped to avoid conflicts)
+    environment:
+      - DREMIO_JAVA_SERVER_EXTRA_OPTS=-Dpaths.local=/opt/dremio/data/db
+    volumes:
+      - dremio-data:/opt/dremio/data
+    networks:
+      - dremio-mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9047"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
   dremio-mcp:
     build: 
       context: ./services/dremio-mcp
@@ -6,20 +24,20 @@ services:
     ports:
       - "7910:7910"
     environment:
-      - DREMIO_URI=${DREMIO_URI}
+      - DREMIO_URI=http://dremio:9047
       - EXTRA_ARGS=${MCP_EXTRA_ARGS:-}
     # the token is set by the token refresher service
     # but you can also mount your token here and remove the token refresher service
     volumes:
       - token-volume:/app/tokens:ro
     depends_on:
-      - token-refresher
+      dremio:
+        condition: service_healthy
+      token-refresher:
+        condition: service_started
     # make sure $DREMIO_URI is accessible to the dremio mcp service on a network ...
     networks:
       - dremio-mcp-network
-    # ... or as an extra_host:
-    extra_hosts:
-      - "dremio.dev.serraict.me:host-gateway"
 
   token-refresher:
     build:
@@ -27,20 +45,23 @@ services:
       dockerfile: Dockerfile
     container_name: "${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}_token-refresher_1"
     environment:
-      - DREMIO_URI=${DREMIO_URI}
-      - DREMIO_USERNAME=${DREMIO_USERNAME}
-      - DREMIO_PASSWORD=${DREMIO_PASSWORD}
+      - DREMIO_URI=http://dremio:9047
+      - DREMIO_USERNAME=${DREMIO_USERNAME:-admin}
+      - DREMIO_PASSWORD=${DREMIO_PASSWORD:-admin123}
       - REFRESH_INTERVAL=${REFRESH_INTERVAL:-72000}
       - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}
     volumes:
       - token-volume:/app/tokens:rw
+    depends_on:
+      dremio:
+        condition: service_healthy
     networks:
       - dremio-mcp-network
-    extra_hosts:
-      - "dremio.dev.serraict.me:host-gateway"
 
 volumes:
   token-volume:
+    driver: local
+  dremio-data:
     driver: local
 
 networks:
