@@ -3,20 +3,21 @@ services:
     build: 
       context: ./services/dremio-mcp
       dockerfile: Dockerfile
-    container_name: "${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}_dremio-mcp_1"
     ports:
       - "7910:7910"
     environment:
       - DREMIO_URI=${DREMIO_URI}
       - EXTRA_ARGS=${MCP_EXTRA_ARGS:-}
+    # the token is set by the token refresher service
+    # but you can also mount your token here and remove the token refresher service
     volumes:
       - token-volume:/app/tokens:ro
     depends_on:
       - token-refresher
+    # make sure $DREMIO_URI is accessible to the dremio mcp service on a network ...
     networks:
       - dremio-mcp-network
-    stdin_open: true
-    tty: true
+    # ... or as an extra_host:
     extra_hosts:
       - "dremio.dev.serraict.me:host-gateway"
 
