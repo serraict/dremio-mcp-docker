@@ -15,12 +15,6 @@ AI-Human Collaboration Platform for Data Analysis
   
    Simply ask your AI agent to read and follow the instructions in [`bootstrap.md`](bootstrap.md).
 
-## Requirements
-
-- Docker and Docker Compose installed
-- Ports 9047 and 7910 available
-- VS Code with MCP support (or other MCP-compatible AI client)
-
 ---
 
 *Let your AI agent take it from here by reading [`bootstrap.md`](bootstrap.md)!*
