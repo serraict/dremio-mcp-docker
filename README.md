@@ -19,8 +19,8 @@ AI-Human Collaboration Platform for Data Analysis
 
 Works with ...
 
-👍 Claude Code - tested by [@serra]
-🚀 VSCode + Github CoPilot - verified by [@serra]
+- 👍 Claude Code - tested by [@serra]
+- 🚀 VSCode + Github CoPilot - verified by [@serra]
 
 ☝️ test & add your tool here
 
