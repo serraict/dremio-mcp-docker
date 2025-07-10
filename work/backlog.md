@@ -9,7 +9,4 @@ This repository demonstrates how to do this.
 
 ## Backlog
 
-* make this a standalone project
-  * include the latest dremio edition in the docker compose file (dremio/dremio-oss:latest)
-  * enable sample data source
-  * write a test script that uses the test data
+* rewrite the test guide
