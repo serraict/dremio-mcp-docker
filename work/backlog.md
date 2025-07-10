@@ -9,4 +9,4 @@ This repository demonstrates how to do this.
 
 ## Backlog
 
-* rewrite the test guide
+✅ issues and pull requests are welcome!
