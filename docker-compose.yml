@@ -50,6 +50,7 @@ services:
       - DREMIO_PASSWORD=${DREMIO_PASSWORD:-admin123}
       - REFRESH_INTERVAL=${REFRESH_INTERVAL:-72000}
       - COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME:-dremio-mcp-docker}
+      - TOKEN_FILE=/app/tokens/current.token
     volumes:
       - token-volume:/app/tokens:rw
     depends_on:
