@@ -17,4 +17,11 @@ AI-Human Collaboration Platform for Data Analysis
 
 ---
 
-*Let your AI agent take it from here by reading [`bootstrap.md`](bootstrap.md)!*
+Works with ...
+
+👍 Claude Code - tested by [@serra]
+🚀 VSCode + Github CoPilot - verified by [@serra]
+
+☝️ test & add your tool here
+
+[@serra]: https://github.com/serra
